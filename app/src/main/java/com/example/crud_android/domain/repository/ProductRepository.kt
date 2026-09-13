@@ -9,6 +9,13 @@ interface ProductRepository {
         id: Int
     ): ProductModel
 
+    suspend fun createProduct(
+        title: String,
+        price: Double,
+        description: String,
+        category: String
+    ): ProductModel
+
     suspend fun updateProduct(
         id: Int,
         title: String,

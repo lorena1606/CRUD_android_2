@@ -2,6 +2,7 @@ package com.example.crud_android.data.repository
 
 import com.example.crud_android.data.mapper.toDomain
 import com.example.crud_android.data.remote.api.ProductApiService
+import com.example.crud_android.data.remote.dto.req.product.ProductCreateReq
 import com.example.crud_android.data.remote.dto.req.product.ProductUpdateReq
 import com.example.crud_android.domain.model.ProductModel
 import com.example.crud_android.domain.repository.ProductRepository
@@ -17,6 +18,22 @@ class ProductRepositoryImpl @Inject constructor(
 
     override suspend fun GetProductById(id: Int): ProductModel {
         val response = api.GetProductByid(id)
+        return response.toDomain()
+    }
+
+    override suspend fun createProduct(
+        title: String,
+        price: Double,
+        description: String,
+        category: String
+    ): ProductModel {
+        val request = ProductCreateReq(
+            title = title,
+            price = price,
+            description = description,
+            category = category
+        )
+        val response = api.createProduct(request)
         return response.toDomain()
     }
 

@@ -3,7 +3,9 @@ package com.example.crud_android.ui.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,12 +45,30 @@ fun ProductScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var productToDeleteId by remember { mutableStateOf<Int?>(null) }
 
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var newProductTitle by remember { mutableStateOf("") }
+    var newProductPrice by remember { mutableStateOf("") }
+    var newProductDescription by remember { mutableStateOf("") }
+    var newProductCategory by remember { mutableStateOf("") }
+
+    var searchIdText by remember { mutableStateOf("") }
+
     LaunchedEffect(uiState.isUpdateSuccess) {
         if (uiState.isUpdateSuccess) {
             isEditMode = false
             selectedProductId = null
             viewModel.getAllProducts() // Refrescar lista
             onNavigateBack()
+        }
+    }
+
+    LaunchedEffect(uiState.isCreateSuccess) {
+        if (uiState.isCreateSuccess) {
+            showCreateDialog = false
+            newProductTitle = ""
+            newProductPrice = ""
+            newProductDescription = ""
+            newProductCategory = ""
         }
     }
 
@@ -84,31 +105,141 @@ fun ProductScreen(
         )
     }
 
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            title = { Text(text = "➕ Añadir Nuevo Producto") },
+            text = {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item {
+                        OutlinedTextField(
+                            value = newProductTitle,
+                            onValueChange = { newProductTitle = it },
+                            label = { Text("Título del Producto ✏️") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = newProductPrice,
+                            onValueChange = { newProductPrice = it },
+                            label = { Text("Precio 💰") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = newProductDescription,
+                            onValueChange = { newProductDescription = it },
+                            label = { Text("Descripción 📝") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = newProductCategory,
+                            onValueChange = { newProductCategory = it },
+                            label = { Text("Categoría 🏷️") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val priceDouble = newProductPrice.toDoubleOrNull() ?: 0.0
+                        viewModel.createProduct(
+                            title = newProductTitle,
+                            price = priceDouble,
+                            description = newProductDescription,
+                            category = newProductCategory
+                        )
+                    }
+                ) {
+                    Text(text = "Guardar ✅")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showCreateDialog = false }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
         if (!isEditMode) {
-            Text(
-                text = "📱 Listado de Productos (\"Ver Todos\")",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "📱 CRUD Productos",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Button(onClick = { showCreateDialog = true }) {
+                    Text(text = "➕ Añadir")
+                }
+            }
+
+            // Barra de búsqueda rápida por ID
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = searchIdText,
+                    onValueChange = { 
+                        searchIdText = it 
+                        if (it.trim().isEmpty()) {
+                            viewModel.getAllProducts() // Restablecer lista completa al vaciar
+                        }
+                    },
+                    label = { Text("Buscar por ID 🔍") },
+                    modifier = Modifier.weight(1f)
+                )
+                Button(
+                    onClick = {
+                        val idInt = searchIdText.trim().toIntOrNull()
+                        if (idInt != null) {
+                            viewModel.getProductById(idInt)
+                        } else {
+                            viewModel.getAllProducts()
+                        }
+                    }
+                ) {
+                    Text(text = "Buscar")
+                }
+            }
 
             if (uiState.isLoading && uiState.products.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.padding(32.dp))
-                Text(text = "Consumiendo API dummyjson... 🔄")
+                Text(text = "Procesando... 🔄")
             } else if (uiState.errorMessage != null && uiState.products.isEmpty()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(text = "❌ ${uiState.errorMessage}")
-                    Button(onClick = { viewModel.getAllProducts() }) {
-                        Text(text = "Reintentar 🔄")
+                    Text(text = uiState.errorMessage ?: "Error")
+                    Button(onClick = { 
+                        searchIdText = ""
+                        viewModel.getAllProducts() 
+                    }) {
+                        Text(text = "Mostrar Todos 🔄")
                     }
                 }
             } else {

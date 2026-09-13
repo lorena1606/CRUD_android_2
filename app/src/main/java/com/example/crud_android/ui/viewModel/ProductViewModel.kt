@@ -2,6 +2,7 @@ package com.example.crud_android.ui.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.crud_android.domain.useCase.CreateProductUseCase
 import com.example.crud_android.domain.useCase.DeleteProductUseCase
 import com.example.crud_android.domain.useCase.GetAllProductsUseCase
 import com.example.crud_android.domain.useCase.GetProductUseCase
@@ -20,7 +21,8 @@ class ProductViewModel @Inject constructor(
     private val getAllProductsUseCase: GetAllProductsUseCase,
     private val getProductUseCase: GetProductUseCase,
     private val updateProductUseCase: UpdateProductUseCase,
-    private val deleteProductUseCase: DeleteProductUseCase
+    private val deleteProductUseCase: DeleteProductUseCase,
+    private val createProductUseCase: CreateProductUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow(ProductUIState())
     val uiState: StateFlow<ProductUIState> = _uiState.asStateFlow()
@@ -35,7 +37,8 @@ class ProductViewModel @Inject constructor(
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
-                    isUpdateSuccess = false
+                    isUpdateSuccess = false,
+                    isCreateSuccess = false
                 )
             }
             try {
@@ -58,13 +61,43 @@ class ProductViewModel @Inject constructor(
         }
     }
 
+    fun createProduct(title: String, price: Double, description: String, category: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+            try {
+                val newProduct = createProductUseCase(title, price, description, category)
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        products = listOf(newProduct) + state.products,
+                        isCreateSuccess = true,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Error al crear el producto"
+                    )
+                }
+            }
+        }
+    }
+
     fun getProductById(id: Int){
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
-                    updateSuccessMessage = null
+                    updateSuccessMessage = null,
+                    products = emptyList() // Limpiar para mostrar solo el buscado
                 )
             }
             try {
@@ -72,7 +105,7 @@ class ProductViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        product = result,
+                        products = listOf(result),
                         errorMessage = null
                     )
                 }
@@ -81,8 +114,8 @@ class ProductViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        product = null,
-                        errorMessage = e.message ?: "Error al cargar el producto"
+                        products = emptyList(),
+                        errorMessage = "No se encontró producto con ID $id ❌"
                     )
                 }
             }

@@ -29,7 +29,8 @@ fun ProductDetails(
     onUpdate: (String, Double) -> Unit,
     onCancel: () -> Unit = {}
 ) {
-    val product = uiState.product
+    // Si uiState.product es nulo, intentamos tomar el primer elemento de la lista (búsqueda por ID)
+    val product = uiState.product ?: uiState.products.firstOrNull()
 
     if (product != null) {
         var title by remember(product.id) { mutableStateOf(product.title) }
@@ -92,6 +93,16 @@ fun ProductDetails(
 
             if (uiState.errorMessage != null) {
                 Text(text = "❌ ${uiState.errorMessage}", color = Color.Red)
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "❌ No hay datos del producto para editar.")
+            Button(onClick = onCancel) {
+                Text(text = "Regresar")
             }
         }
     }
