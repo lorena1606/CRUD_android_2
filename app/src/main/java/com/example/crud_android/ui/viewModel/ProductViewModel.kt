@@ -2,6 +2,7 @@ package com.example.crud_android.ui.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.crud_android.domain.useCase.GetAllProductsUseCase
 import com.example.crud_android.domain.useCase.GetProductUseCase
 import com.example.crud_android.domain.useCase.UpdateProductUseCase
 import com.example.crud_android.ui.state.ProductUIState
@@ -15,11 +16,45 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
+    private val getAllProductsUseCase: GetAllProductsUseCase,
     private val getProductUseCase: GetProductUseCase,
     private val updateProductUseCase: UpdateProductUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow(ProductUIState())
     val uiState: StateFlow<ProductUIState> = _uiState.asStateFlow()
+
+    init {
+        getAllProducts()
+    }
+
+    fun getAllProducts() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    isUpdateSuccess = false
+                )
+            }
+            try {
+                val list = getAllProductsUseCase()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        products = list,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Error al cargar el listado"
+                    )
+                }
+            }
+        }
+    }
 
     fun getProductById(id: Int){
         viewModelScope.launch {
@@ -67,7 +102,8 @@ class ProductViewModel @Inject constructor(
                     it.copy(
                         isUpdating = false,
                         product = updatedProduct,
-                        updateSuccessMessage = "¡Producto actualizado exitosamente!"
+                        updateSuccessMessage = "¡Producto actualizado exitosamente!",
+                        isUpdateSuccess = true
                     )
                 }
             } catch (e: Exception) {

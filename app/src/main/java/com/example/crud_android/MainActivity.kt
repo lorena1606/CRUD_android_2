@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CRUDTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    ProductScreen(1)
+                    ProductScreen()
                 }
             }
         }

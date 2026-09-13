@@ -1,0 +1,10 @@
+package com.example.crud_android.data.remote.dto.req.product
+
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
+data class ProductListResponse(
+    @param:Json(name = "products")
+    val products: List<Product>
+)

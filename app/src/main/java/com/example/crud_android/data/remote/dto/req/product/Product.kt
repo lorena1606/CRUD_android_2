@@ -1,53 +1,52 @@
 package com.example.crud_android.data.remote.dto.req.product
 
-
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class Product(
     @param:Json(name = "availabilityStatus")
-    val availabilityStatus: String,
+    val availabilityStatus: String? = null,
     @param:Json(name = "brand")
-    val brand: String,
+    val brand: String? = null,
     @param:Json(name = "category")
-    val category: String,
+    val category: String? = null,
     @param:Json(name = "description")
-    val description: String,
+    val description: String? = null,
     @param:Json(name = "dimensions")
-    val dimensions: Dimensions,
+    val dimensions: Dimensions? = null,
     @param:Json(name = "discountPercentage")
-    val discountPercentage: Double,
+    val discountPercentage: Double? = null,
     @param:Json(name = "id")
     val id: Int,
     @param:Json(name = "images")
-    val images: List<String>,
+    val images: List<String>? = null,
     @param:Json(name = "meta")
-    val meta: Meta,
+    val meta: Meta? = null,
     @param:Json(name = "minimumOrderQuantity")
-    val minimumOrderQuantity: Int,
+    val minimumOrderQuantity: Int? = null,
     @param:Json(name = "price")
-    val price: Double,
+    val price: Double? = null,
     @param:Json(name = "rating")
-    val rating: Double,
+    val rating: Double? = null,
     @param:Json(name = "returnPolicy")
-    val returnPolicy: String,
+    val returnPolicy: String? = null,
     @param:Json(name = "reviews")
-    val reviews: List<Review>,
+    val reviews: List<Review>? = null,
     @param:Json(name = "shippingInformation")
-    val shippingInformation: String,
+    val shippingInformation: String? = null,
     @param:Json(name = "sku")
-    val sku: String,
+    val sku: String? = null,
     @param:Json(name = "stock")
-    val stock: Int,
+    val stock: Int? = null,
     @param:Json(name = "tags")
-    val tags: List<String>,
+    val tags: List<String>? = null,
     @param:Json(name = "thumbnail")
-    val thumbnail: String,
+    val thumbnail: String? = null,
     @param:Json(name = "title")
-    val title: String,
+    val title: String? = null,
     @param:Json(name = "warrantyInformation")
-    val warrantyInformation: String,
+    val warrantyInformation: String? = null,
     @param:Json(name = "weight")
-    val weight: Int
+    val weight: Int? = null
 )
