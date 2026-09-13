@@ -2,6 +2,7 @@ package com.example.crud_android.ui.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.crud_android.domain.useCase.DeleteProductUseCase
 import com.example.crud_android.domain.useCase.GetAllProductsUseCase
 import com.example.crud_android.domain.useCase.GetProductUseCase
 import com.example.crud_android.domain.useCase.UpdateProductUseCase
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class ProductViewModel @Inject constructor(
     private val getAllProductsUseCase: GetAllProductsUseCase,
     private val getProductUseCase: GetProductUseCase,
-    private val updateProductUseCase: UpdateProductUseCase
+    private val updateProductUseCase: UpdateProductUseCase,
+    private val deleteProductUseCase: DeleteProductUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow(ProductUIState())
     val uiState: StateFlow<ProductUIState> = _uiState.asStateFlow()
@@ -111,6 +113,34 @@ class ProductViewModel @Inject constructor(
                     it.copy(
                         isUpdating = false,
                         errorMessage = e.message ?: "Error al actualizar el producto"
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteProduct(id: Int) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+            try {
+                deleteProductUseCase(id)
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        products = state.products.filter { it.id != id },
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Error al eliminar el producto"
                     )
                 }
             }

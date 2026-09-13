@@ -14,4 +14,8 @@ interface ProductRepository {
         title: String,
         price: Double,
     ): ProductModel
+
+    suspend fun deleteProduct(
+        id: Int
+    ): ProductModel
 }
