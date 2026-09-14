@@ -30,17 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.crud_android.ui.component.productCard
-import com.example.crud_android.ui.section.ProductDetails
 import com.example.crud_android.ui.viewModel.ProductViewModel
 
 @Composable
 fun ProductScreen(
-    onNavigateBack: () -> Unit = {},
+    onEditNavigate: (Int) -> Unit = {},
     viewModel: ProductViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var isEditMode by remember { mutableStateOf(false) }
-    var selectedProductId by remember { mutableStateOf<Int?>(null) }
     
     var showDeleteDialog by remember { mutableStateOf(false) }
     var productToDeleteId by remember { mutableStateOf<Int?>(null) }
@@ -52,15 +49,6 @@ fun ProductScreen(
     var newProductCategory by remember { mutableStateOf("") }
 
     var searchIdText by remember { mutableStateOf("") }
-
-    LaunchedEffect(uiState.isUpdateSuccess) {
-        if (uiState.isUpdateSuccess) {
-            isEditMode = false
-            selectedProductId = null
-            viewModel.getAllProducts() // Refrescar lista
-            onNavigateBack()
-        }
-    }
 
     LaunchedEffect(uiState.isCreateSuccess) {
         if (uiState.isCreateSuccess) {
@@ -173,110 +161,93 @@ fun ProductScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        if (!isEditMode) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "📱 CRUD Productos",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Button(onClick = { showCreateDialog = true }) {
-                    Text(text = "➕ Añadir")
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📱 CRUD Productos",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Button(onClick = { showCreateDialog = true }) {
+                Text(text = "➕ Añadir")
             }
+        }
 
-            // Barra de búsqueda rápida por ID
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+        // Barra de búsqueda rápida por ID
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = searchIdText,
+                onValueChange = { 
+                    searchIdText = it 
+                    if (it.trim().isEmpty()) {
+                        viewModel.getAllProducts()
+                    }
+                },
+                label = { Text("Buscar por ID 🔍") },
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = {
+                    val idInt = searchIdText.trim().toIntOrNull()
+                    if (idInt != null) {
+                        viewModel.getProductById(idInt)
+                    } else {
+                        viewModel.getAllProducts()
+                    }
+                }
             ) {
-                OutlinedTextField(
-                    value = searchIdText,
-                    onValueChange = { 
-                        searchIdText = it 
-                        if (it.trim().isEmpty()) {
-                            viewModel.getAllProducts() // Restablecer lista completa al vaciar
-                        }
-                    },
-                    label = { Text("Buscar por ID 🔍") },
-                    modifier = Modifier.weight(1f)
-                )
-                Button(
-                    onClick = {
-                        val idInt = searchIdText.trim().toIntOrNull()
-                        if (idInt != null) {
-                            viewModel.getProductById(idInt)
-                        } else {
-                            viewModel.getAllProducts()
-                        }
-                    }
-                ) {
-                    Text(text = "Buscar")
-                }
+                Text(text = "Buscar")
             }
+        }
 
-            if (uiState.isLoading && uiState.products.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.padding(32.dp))
-                Text(text = "Procesando... 🔄")
-            } else if (uiState.errorMessage != null && uiState.products.isEmpty()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(text = uiState.errorMessage ?: "Error")
-                    Button(onClick = { 
-                        searchIdText = ""
-                        viewModel.getAllProducts() 
-                    }) {
-                        Text(text = "Mostrar Todos 🔄")
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.products) { product ->
-                        productCard(
-                            product = product,
-                            onEditClick = {
-                                selectedProductId = product.id
-                                viewModel.getProductById(product.id)
-                                isEditMode = true
-                            },
-                            onDeleteClick = {
-                                productToDeleteId = product.id
-                                showDeleteDialog = true
-                            }
-                        )
-                    }
+        if (uiState.isLoading && uiState.products.isEmpty()) {
+            CircularProgressIndicator(modifier = Modifier.padding(32.dp))
+            Text(text = "Procesando... 🔄")
+        } else if (uiState.errorMessage != null && uiState.products.isEmpty()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(text = uiState.errorMessage ?: "Error")
+                Button(onClick = { 
+                    searchIdText = ""
+                    viewModel.getAllProducts() 
+                }) {
+                    Text(text = "Mostrar Todos 🔄")
                 }
             }
         } else {
-            ProductDetails(
-                uiState = uiState,
-                onUpdate = { title, price ->
-                    selectedProductId?.let { id ->
-                        viewModel.updateProduct(id, title, price)
-                    }
-                },
-                onCancel = { 
-                    isEditMode = false 
-                    selectedProductId = null
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.products) { product ->
+                    productCard(
+                        product = product,
+                        onEditClick = {
+                            onEditNavigate(product.id)
+                        },
+                        onDeleteClick = {
+                            productToDeleteId = product.id
+                            showDeleteDialog = true
+                        }
+                    )
                 }
-            )
+            }
         }
     }
 }
