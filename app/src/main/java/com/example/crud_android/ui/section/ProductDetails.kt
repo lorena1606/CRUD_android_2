@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +30,6 @@ fun ProductDetails(
     onUpdate: (String, Double) -> Unit,
     onCancel: () -> Unit = {}
 ) {
-    // Si uiState.product es nulo, intentamos tomar el primer elemento de la lista (búsqueda por ID)
     val product = uiState.product ?: uiState.products.firstOrNull()
 
     if (product != null) {
@@ -40,17 +40,9 @@ fun ProductDetails(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "📝 Actualizar Producto",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -64,6 +56,8 @@ fun ProductDetails(
                 label = { Text("Nuevo Precio 💰") },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (uiState.isUpdating) {
                 CircularProgressIndicator()
@@ -79,7 +73,7 @@ fun ProductDetails(
                     Text(text = "Actualizar Producto 🔄")
                 }
                 
-                Button(
+                OutlinedButton(
                     onClick = onCancel,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -88,19 +82,30 @@ fun ProductDetails(
             }
 
             uiState.updateSuccessMessage?.let {
-                Text(text = "✅ $it", color = Color(0xFF4CAF50))
+                Text(
+                    text = "✅ $it", 
+                    color = Color(0xFF4CAF50),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             if (uiState.errorMessage != null) {
-                Text(text = "❌ ${uiState.errorMessage}", color = Color.Red)
+                Text(
+                    text = "❌ ${uiState.errorMessage}", 
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
         }
     } else {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(text = "❌ No hay datos del producto para editar.")
+            Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onCancel) {
                 Text(text = "Regresar")
             }
